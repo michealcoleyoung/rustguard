@@ -1,8 +1,21 @@
-use std::io;
+use inquire::Select;
 
 fn main() {
-    let mut input = String::new();
-    println!("Enter something");
-    io::stdin().read_line(&mut input).expect("Failed to read input");
-    println!("You entered: {}", input);
+    println!("Welcome to RustGuard! \n");
+
+    let options = vec![
+        "Add a password",
+        "View all passwords",
+        "Delete a password",
+        "Exit",
+    ];
+
+    let answer = Select::new("What would you like to do", options).prompt();
+
+    match answer {
+        Ok(choice) => {
+            println!("You selected {}", choice);
+        }
+        Err(_) => println!("There was an error reading your input."),
+    }
 }
