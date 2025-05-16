@@ -1,6 +1,12 @@
+use crate::models::PassWordEntry;
+use crate::storage::{load_passwords, save_passwords};
 use inquire::Text;
 
 pub fn add_password() {
+    // Collect input from user
+    // Create PasswordEntry
+    // Call storage functions to save
+
     let site = match Text::new("Enter the site name:").prompt() {
         Ok(input) => input,
         Err(_) => {
@@ -38,4 +44,15 @@ pub fn add_password() {
     println!("email: {}", email);
     println!("username: {}", username);
     println!("password: {}", password);
+}
+
+pub fn view_passwords() {
+    // Load passwords
+    // Display to user
+}
+
+pub fn delete_passwords() {
+    // Load passwords
+    // Let user select password to delete
+    // Save updated list
 }
