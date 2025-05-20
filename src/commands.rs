@@ -44,15 +44,35 @@ pub fn add_password() {
     println!("email: {}", email);
     println!("username: {}", username);
     println!("password: {}", password);
+
+    let entry = PassWordEntry {
+        site,
+        email,
+        username,
+        password,
+    };
+
+    // Load existing passwords
+    let mut entries = load_passwords();
+
+    // Add new entry
+    entries.push(entry);
+
+    // Save all entries
+    match save_passwords(&entries) {
+        Ok(_) => println!("Password saved successfully!"),
+        Err(e) => println!("Error saving password: {}", e),
+    }
 }
 
-pub fn view_passwords() {
-    // Load passwords
-    // Display to user
-}
+// pub fn view_passwords() {
+//     // Load passwords
+//     // Display to user
+//     {}
+// }
 
-pub fn delete_passwords() {
-    // Load passwords
-    // Let user select password to delete
-    // Save updated list
-}
+// pub fn delete_passwords() {
+//     // Load passwords
+//     // Let user select password to delete
+//     // Save updated list
+// }

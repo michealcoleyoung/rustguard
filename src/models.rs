@@ -1,10 +1,9 @@
-struct PassWordEntry {
-    site: String,
-    email: String,
-    username: String,
-    password: String,
-}
+use serde::{Deserialize, Serialize};
 
-pub struct Vault {
-    pub entries: Vec<PasswordEntry>,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PassWordEntry {
+    pub site: String,
+    pub email: String,
+    pub username: String,
+    pub password: String,
 }
