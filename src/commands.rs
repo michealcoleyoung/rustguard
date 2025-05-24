@@ -65,11 +65,22 @@ pub fn add_password() {
     }
 }
 
-// pub fn view_passwords() {
-//     // Load passwords
-//     // Display to user
-//     {}
-// }
+pub fn view_passwords() {
+    // Load entries
+    let entries = load_passwords();
+
+    // Check if empty
+    if entries.is_empty() {
+        println!("You have no saved passwords.");
+        return;
+    } else {
+        println!("You have some passwords stored!");
+    }
+
+    // For each entry, display site and username
+    // Show masked version of password or ask user what they would like to do
+    // Provide navigation options
+}
 
 // pub fn delete_passwords() {
 //     // Load passwords

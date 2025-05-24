@@ -20,6 +20,9 @@ fn main() {
             "Add a password" => {
                 commands::add_password();
             }
+            "View all passwords" => {
+                commands::view_passwords();
+            }
             _ => println!("You selected {}", choice),
         },
         Err(_) => println!("There was an error reading your input."),
