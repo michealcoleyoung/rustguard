@@ -17,7 +17,7 @@ pub fn add_password() {
         }
     };
 
-    let email = match Text::new("Enter the email addresss:").prompt() {
+    let email = match Text::new("Enter the email address:").prompt() {
         Ok(input) => input,
         Err(_) => {
             println!("Error reading email address");
@@ -127,9 +127,95 @@ pub fn view_passwords() {
     }
 }
 
-// pub fn edit_password() {
+// Allow user to edit individual details of password info
+pub fn edit_password() {
+    // Load entries
+    let mut entries = load_passwords();
 
-// }
+    // Check if empty
+    if entries.is_empty() {
+        println!("You have no saved passwords.");
+        return;
+    }
+    println!("Saved password entries: ");
+    for (index, entry) in entries.iter().enumerate() {
+        println!(
+            "{}. {} (Username: {})",
+            index + 1,
+            entry.site,
+            entry.username
+        );
+    }
+    // Prompt user to select an entry
+    let choice = match Text::new(
+        "Enter the number of the entry to view details (or press Enter to cancel):",
+    )
+    .prompt()
+    {
+        Ok(input) if input.is_empty() => return,
+        Ok(input) => match input.parse::<usize>() {
+            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            _ => {
+                println!("Invalid selection.");
+                return;
+            }
+        },
+        Err(_) => {
+            println!("Error reading input.");
+            return;
+        }
+    };
+    let selected = &mut entries[choice];
+
+    // Update site
+    let update_site = inquire::Confirm::new("Update site")
+        .with_default(false)
+        .prompt()
+        .unwrap_or(false);
+    if update_site {
+        let new_site = Text::new("Enter new site: ").prompt().ok();
+        if let Some(site) = new_site {
+            selected.site = site;
+        }
+    }
+    // Update email
+    let update_email = inquire::Confirm::new("Update email")
+        .with_default(false)
+        .prompt()
+        .unwrap_or(false);
+    if update_email {
+        let new_email = Text::new("Enter new email: ").prompt().ok();
+        if let Some(email) = new_email {
+            selected.email = email;
+        }
+    }
+    // Update email
+    let update_username = inquire::Confirm::new("Update username")
+        .with_default(false)
+        .prompt()
+        .unwrap_or(false);
+    if update_username {
+        let new_username = Text::new("Enter new username: ").prompt().ok();
+        if let Some(username) = new_username {
+            selected.username = username;
+        }
+    }
+    // Update password
+    let update_password = inquire::Confirm::new("Update password")
+        .with_default(false)
+        .prompt()
+        .unwrap_or(false);
+    if update_password {
+        let new_password = Text::new("Enter new password: ").prompt().ok();
+        if let Some(password) = new_password {
+            selected.password = password;
+        }
+    }
+    match save_passwords(&entries) {
+        Ok(_) => println!("Password entry updated successfully!"),
+        Err(e) => println!("Error saving changes: {}", e),
+    }
+}
 
 // pub fn delete_passwords() {
 //     // Load passwords

@@ -24,6 +24,13 @@ fn main() {
             "View all passwords" => {
                 commands::view_passwords();
             }
+            "Edit password" => {
+                commands::edit_password();
+            }
+
+            // "Delete a password" => {
+            //     commands::delete_password();
+            // }
             _ => println!("You selected {}", choice),
         },
         Err(_) => println!("There was an error reading your input."),
