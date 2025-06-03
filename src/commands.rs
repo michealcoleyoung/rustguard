@@ -1,6 +1,8 @@
 use crate::models::PassWordEntry;
 use crate::storage::{load_passwords, save_passwords};
 use inquire::Text;
+use std::usize;
+// use serde_json::Value;
 
 pub fn add_password() {
     // Collect input from user
@@ -65,10 +67,68 @@ pub fn add_password() {
     }
 }
 
-// pub fn view_passwords() {
-//     // Load passwords
-//     // Display to user
-//     {}
+pub fn view_passwords() {
+    // Load entries
+    let entries = load_passwords();
+
+    // Check if empty
+    if entries.is_empty() {
+        println!("You have no saved passwords.");
+        return;
+    }
+    println!("Saved password entries: ");
+    for (index, entry) in entries.iter().enumerate() {
+        println!(
+            "{}. {} (Username: {})",
+            index + 1,
+            entry.site,
+            entry.username
+        );
+    }
+    // Prompt user to select an entry
+    let choice = match Text::new(
+        "Enter the number of the entry to view details (or press Enter to cancel):",
+    )
+    .prompt()
+    {
+        Ok(input) if input.is_empty() => return,
+        Ok(input) => match input.parse::<usize>() {
+            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            _ => {
+                println!("Invalid selection.");
+                return;
+            }
+        },
+        Err(_) => {
+            println!("Error reading input.");
+            return;
+        }
+    };
+    let selected = &entries[choice];
+
+    // Ask user if they would like to view the password
+    let reveal = match inquire::Confirm::new("Would you like to view the password")
+        .with_default(false)
+        .prompt()
+    {
+        Ok(answer) => answer,
+        Err(_) => {
+            println!("Error reading response.");
+            return;
+        }
+    };
+    println!("Site: {}", selected.site);
+    println!("Email: {}", selected.email);
+    println!("Username: {}", selected.username);
+    if reveal {
+        println!("Password: {}", selected.password);
+    } else {
+        println!("Password: ********** (hidden)");
+    }
+}
+
+// pub fn edit_password() {
+
 // }
 
 // pub fn delete_passwords() {

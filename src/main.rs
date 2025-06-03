@@ -9,6 +9,7 @@ fn main() {
     let options = vec![
         "Add a password",
         "View all passwords",
+        "Edit password",
         "Delete a password",
         "Exit",
     ];
@@ -19,6 +20,9 @@ fn main() {
         Ok(choice) => match choice {
             "Add a password" => {
                 commands::add_password();
+            }
+            "View all passwords" => {
+                commands::view_passwords();
             }
             _ => println!("You selected {}", choice),
         },

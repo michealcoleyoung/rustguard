@@ -1,7 +1,7 @@
 use crate::models::PassWordEntry;
 use ::std::path::Path;
 use std::fs::File;
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 
 const VAULT_FILE: &str = "passwords.json";
 
