@@ -27,10 +27,9 @@ fn main() {
             "Edit password" => {
                 commands::edit_password();
             }
-
-            // "Delete a password" => {
-            //     commands::delete_password();
-            // }
+            "Delete a password" => {
+                commands::delete_password();
+            }
             _ => println!("You selected {}", choice),
         },
         Err(_) => println!("There was an error reading your input."),

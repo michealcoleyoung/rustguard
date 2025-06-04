@@ -211,14 +211,69 @@ pub fn edit_password() {
             selected.password = password;
         }
     }
+    // Save passwords
     match save_passwords(&entries) {
         Ok(_) => println!("Password entry updated successfully!"),
         Err(e) => println!("Error saving changes: {}", e),
     }
 }
 
-// pub fn delete_passwords() {
-//     // Load passwords
-//     // Let user select password to delete
-//     // Save updated list
-// }
+pub fn delete_password() {
+    // Load passwords
+    let mut entries = load_passwords();
+   
+     // Check if empty
+    if entries.is_empty() {
+        println!("You have no saved passwords.");
+        return;
+    }
+
+    // Display the password entries
+    println!("Saved password entries: ");
+    for (index, entry) in entries.iter().enumerate() {
+        println!(
+            "{}. {} (Username: {})",
+            index + 1,
+            entry.site,
+            entry.username
+        );
+    }
+    
+    // Prompt the user to select an entry
+    let choice = match Text::new(
+        "Enter the number of the entry to view details (or press Enter to cancel):",
+    )
+    .prompt()
+    {
+        Ok(input) if input.is_empty() => return,
+        Ok(input) => match input.parse::<usize>() {
+            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            _ => {
+                println!("Invalid selection.");
+                return;
+            }
+        },
+        Err(_) => {
+            println!("Error reading input.");
+            return;
+        }
+    };
+
+    // Ask for confirmation before deleting
+    let confirm = inquire::Confirm::new("Are you sure you want to delete this entry?")
+        .with_default(false)
+        .prompt();
+    if !confirm.unwrap_or(false) {
+        println!("Deletion cancelled.");
+        return;
+    }
+    
+    // Remove entry from vector
+    entries.remove(choice);
+
+    // Save updated list using save_passwords
+      match save_passwords(&entries) {
+        Ok(_) => println!("Password entry updated successfully!"),
+        Err(e) => println!("Error saving changes: {}", e),
+    }
+}
