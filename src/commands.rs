@@ -2,7 +2,6 @@ use crate::models::PassWordEntry;
 use crate::storage::{load_passwords, save_passwords};
 use inquire::Text;
 use std::usize;
-// use serde_json::Value;
 
 pub fn add_password() {
     // Collect input from user
