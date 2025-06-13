@@ -7,3 +7,12 @@ edition = "2024"
 inquire = "0.6"
 serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
+
+# Key derivation
+argon2 = "0.6.0-rc.0"
+
+# Symmmetric encryption (AES-GCM or ChaCha20Poly1305)
+chacha20poly1305 = "0.10"
+
+# Random generation
+getrandom = "0.2"

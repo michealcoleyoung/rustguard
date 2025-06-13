@@ -1,12 +1,12 @@
-use crate::models::{PassWordEntry, Vault};
+use crate::models::{Vault};
 use chacha20poly1305::{
     aead::{Aead, KeyInit, OsRng},
     ChaCha20Poly1305, Nonce,
 };
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 use ::std::path::Path;
 use std::fs;
-use std::io::{self, Read, Write};
+use std::io::{Read};
 
 // Encrypted file where passwords are stored
 const VAULT_FILE: &str = "vault.json";

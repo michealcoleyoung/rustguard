@@ -1,82 +1,46 @@
 use crate::models::PassWordEntry;
-use crate::storage::{load_passwords, save_passwords};
-use inquire::Text;
-use std::usize;
+use crate::storage::{save_vault};
+use crate::Vault;
+use inquire::{Text, Confirm};
 
-pub fn add_password() {
-    // Collect input from user
-    // Create PasswordEntry
-    // Call storage functions to save
+use std::error::Error;
 
-    let site = match Text::new("Enter the site name:").prompt() {
-        Ok(input) => input,
-        Err(_) => {
-            println!("Error reading site name");
-            return;
-        }
-    };
+// Type alias for results
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-    let email = match Text::new("Enter the email address:").prompt() {
-        Ok(input) => input,
-        Err(_) => {
-            println!("Error reading email address");
-            return;
-        }
-    };
+// Add a new password entry to vault
+pub fn add_password(vault: &mut Vault, key: &[u8]) -> Result<()> {
+   println!("Adding a new password entry:");
 
-    let username = match Text::new("Enter the username:").prompt() {
-        Ok(input) => input,
-        Err(_) => {
-            println!("Error reading username");
-            return;
-        }
-    };
+   let site = Text::new("Enter the site name:").prompt()?;
+   let email = Text::new("Enter the email address:").prompt()?;
+   let username = Text::new("Enter the username:").prompt()?;
+   let password = Text::new("Enter the password:").prompt()?;
 
-    let password = match Text::new("Enter the password:").prompt() {
-        Ok(input) => input,
-        Err(_) => {
-            println!("Error reading password");
-            return;
-        }
-    };
+   let entry = PassWordEntry {
+       site,
+       email,
+       username,
+       password
+   };
 
-    println!("The account information you've provided is listed below:");
-    println!("site: {}", site);
-    println!("email: {}", email);
-    println!("username: {}", username);
-    println!("password: {}", password);
+   vault.entries.push(entry);
 
-    let entry = PassWordEntry {
-        site,
-        email,
-        username,
-        password,
-    };
+   save_vault(vault, key)?;
+   println!("Password added successfully.\n");
 
-    // Load existing passwords
-    let mut entries = load_passwords();
-
-    // Add new entry
-    entries.push(entry);
-
-    // Save all entries
-    match save_passwords(&entries) {
-        Ok(_) => println!("Password saved successfully!"),
-        Err(e) => println!("Error saving password: {}", e),
-    }
+   Ok(())
 }
 
-pub fn view_passwords() {
-    // Load entries
-    let entries = load_passwords();
-
-    // Check if empty
-    if entries.is_empty() {
-        println!("You have no saved passwords.");
+// View all saved password entries
+pub fn view_passwords(vault: &Vault) {
+    if vault.entries.is_empty() {
+        println!("You have no saved passwords");
         return;
     }
-    println!("Saved password entries: ");
-    for (index, entry) in entries.iter().enumerate() {
+
+    println!("Saved password entries:");
+    for (index, entry) in vault.entries.iter().enumerate() {
         println!(
             "{}. {} (Username: {})",
             index + 1,
@@ -84,15 +48,14 @@ pub fn view_passwords() {
             entry.username
         );
     }
-    // Prompt user to select an entry
-    let choice = match Text::new(
-        "Enter the number of the entry to view details (or press Enter to cancel):",
-    )
-    .prompt()
+
+    // Prompt to select entry for more details
+    let choice = match Text::new("Enter the number of an entry to view details (or press Enter to skip):")
+        .prompt()
     {
         Ok(input) if input.is_empty() => return,
         Ok(input) => match input.parse::<usize>() {
-            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            Ok(num) if num > 0 && num <= vault.entries.len() => num - 1,
             _ => {
                 println!("Invalid selection.");
                 return;
@@ -103,20 +66,15 @@ pub fn view_passwords() {
             return;
         }
     };
-    let selected = &entries[choice];
 
-    // Ask user if they would like to view the password
-    let reveal = match inquire::Confirm::new("Would you like to view the password")
+    let selected = &vault.entries[choice];
+
+    let reveal = Confirm::new("Would you like to view the password?")
         .with_default(false)
         .prompt()
-    {
-        Ok(answer) => answer,
-        Err(_) => {
-            println!("Error reading response.");
-            return;
-        }
-    };
-    println!("Site: {}", selected.site);
+        .unwrap_or(false);
+
+    println!("\nSite: {}", selected.site);
     println!("Email: {}", selected.email);
     println!("Username: {}", selected.username);
     if reveal {
@@ -124,20 +82,18 @@ pub fn view_passwords() {
     } else {
         println!("Password: ********** (hidden)");
     }
+    println!();
 }
 
-// Allow user to edit individual details of password info
-pub fn edit_password() {
-    // Load entries
-    let mut entries = load_passwords();
-
-    // Check if empty
-    if entries.is_empty() {
-        println!("You have no saved passwords.");
-        return;
+// Edit fields of an existing password entry
+pub fn edit_password(vault: &mut Vault, key: &[u8]) -> Result<()> {
+    if vault.entries.is_empty() {
+        println!("No saved passwords to edit.");
+        return Ok(());
     }
-    println!("Saved password entries: ");
-    for (index, entry) in entries.iter().enumerate() {
+
+    println!("Select an entry to edit:");
+    for (index, entry) in vault.entries.iter().enumerate() {
         println!(
             "{}. {} (Username: {})",
             index + 1,
@@ -145,91 +101,66 @@ pub fn edit_password() {
             entry.username
         );
     }
-    // Prompt user to select an entry
-    let choice = match Text::new(
-        "Enter the number of the entry to view details (or press Enter to cancel):",
-    )
-    .prompt()
+
+    let choice = match Text::new("Enter the number of the entry to edit:")
+        .prompt()
     {
-        Ok(input) if input.is_empty() => return,
         Ok(input) => match input.parse::<usize>() {
-            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            Ok(num) if num > 0 && num <= vault.entries.len() => num - 1,
             _ => {
                 println!("Invalid selection.");
-                return;
+                return Ok(());
             }
         },
+
         Err(_) => {
             println!("Error reading input.");
-            return;
+            return Ok(());
         }
     };
-    let selected = &mut entries[choice];
 
-    // Update site
-    let update_site = inquire::Confirm::new("Update site")
-        .with_default(false)
-        .prompt()
-        .unwrap_or(false);
-    if update_site {
-        let new_site = Text::new("Enter new site: ").prompt().ok();
-        if let Some(site) = new_site {
-            selected.site = site;
-        }
+    let selected = &mut vault.entries[choice];
+
+    macro_rules! update_field {
+        ($prompt:expr, $field:expr) => {{
+            let should_update = Confirm::new(&format!("Update {}?", $prompt))
+                .with_default(false)
+                .prompt()
+                .unwrap_or(false);
+
+            if should_update {
+                let new_value = Text::new(&format!("Enter new {}: ", $prompt))
+                    .prompt()
+                    .ok();
+
+                if let Some(value) = new_value {
+                    $field = value;
+                }
+            }
+        }};
     }
-    // Update email
-    let update_email = inquire::Confirm::new("Update email")
-        .with_default(false)
-        .prompt()
-        .unwrap_or(false);
-    if update_email {
-        let new_email = Text::new("Enter new email: ").prompt().ok();
-        if let Some(email) = new_email {
-            selected.email = email;
-        }
-    }
-    // Update email
-    let update_username = inquire::Confirm::new("Update username")
-        .with_default(false)
-        .prompt()
-        .unwrap_or(false);
-    if update_username {
-        let new_username = Text::new("Enter new username: ").prompt().ok();
-        if let Some(username) = new_username {
-            selected.username = username;
-        }
-    }
-    // Update password
-    let update_password = inquire::Confirm::new("Update password")
-        .with_default(false)
-        .prompt()
-        .unwrap_or(false);
-    if update_password {
-        let new_password = Text::new("Enter new password: ").prompt().ok();
-        if let Some(password) = new_password {
-            selected.password = password;
-        }
-    }
-    // Save passwords
-    match save_passwords(&entries) {
-        Ok(_) => println!("Password entry updated successfully!"),
-        Err(e) => println!("Error saving changes: {}", e),
-    }
+    
+    // Invoke update_field macro
+    update_field!("site", selected.site);
+    update_field!("email", selected.email);
+    update_field!("username", selected.username);
+    update_field!("password", selected.password);
+
+    save_vault(vault, key)?;
+    println!("Entry updated successfully.\n");
+
+    Ok(())
 }
 
-pub fn delete_password() {
-    // Load passwords
-    let mut entries = load_passwords();
-   
-     // Check if empty
-    if entries.is_empty() {
-        println!("You have no saved passwords.");
-        return;
+// Delete a password entry from the vault
+pub fn delete_password(vault: &mut Vault, key: &[u8]) -> Result<()> {
+    if vault.entries.is_empty() {
+        println!("No saved passwords to delete.");
+        return Ok(());
     }
 
-    // Display the password entries
-    println!("Saved password entries: ");
-    for (index, entry) in entries.iter().enumerate() {
+    println!("Select an entry to delete:");
+    for (index, entry) in vault.entries.iter().enumerate() {
         println!(
             "{}. {} (Username: {})",
             index + 1,
@@ -238,41 +169,38 @@ pub fn delete_password() {
         );
     }
     
-    // Prompt the user to select an entry
-    let choice = match Text::new(
-        "Enter the number of the entry to view details (or press Enter to cancel):",
-    )
-    .prompt()
+    let choice = match Text::new("Enter the number of the entry to delete:")
+        .prompt()
     {
-        Ok(input) if input.is_empty() => return,
         Ok(input) => match input.parse::<usize>() {
-            Ok(num) if num > 0 && num <= entries.len() => num - 1,
+            Ok(num) if num > 0 && num <= vault.entries.len() => num - 1,
             _ => {
                 println!("Invalid selection.");
-                return;
+                return Ok(());
             }
         },
         Err(_) => {
             println!("Error reading input.");
-            return;
+            return OK(());
         }
     };
 
-    // Ask for confirmation before deleting
-    let confirm = inquire::Confirm::new("Are you sure you want to delete this entry?")
+    let entry_to_delete = &vault.entries[choice];
+    let confirm = Confirm::new("Are you sure you want to delete this entry?")
         .with_default(false)
-        .prompt();
-    if !confirm.unwrap_or(false) {
-        println!("Deletion cancelled.");
-        return;
-    }
-    
-    // Remove entry from vector
-    entries.remove(choice);
+        .prompt()
+        .unwrap_or(false);
 
-    // Save updated list using save_passwords
-      match save_passwords(&entries) {
-        Ok(_) => println!("Password entry updated successfully!"),
-        Err(e) => println!("Error saving changes: {}", e),
+    if confirm {
+        vault.entries.remove(choice);
+        save_vault(vault, key)?;
+        println!("Entry deleted successfully.");
+    } else {
+        println!("Deletion canceled");
     }
+
+    println!();
+
+    Ok(())
+
 }
